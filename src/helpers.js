@@ -11,10 +11,20 @@ module.exports.getTextFromSelector = async (page, selector) => {
 };
 
 module.exports.writeMessage = async (page, message) => {
-  // click on the first contact
-  // await page.waitForSelector("._2wP_Y", { visible: true });
-  // await page.click("._2wP_Y");
   await page.waitForSelector("._2S1VP", { visible: true });
   await page.keyboard.type(message);
   await page.click("._35EW6");
+};
+
+module.exports.contactsList = async (page) => {
+  await page.waitForSelector("._2wP_Y", { visible: true });
+
+  return page.$$eval("._2wP_Y", (elements) =>
+    elements
+      .map((e) => [
+        parseInt(/translateY\((\d+)px\)/gi.exec(e.getAttribute("style"))[1]),
+        e.querySelector("._25Ooe").textContent,
+      ])
+      .sort((a, b) => a[0] - b[0])
+  );
 };

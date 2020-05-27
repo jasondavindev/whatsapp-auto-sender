@@ -12,6 +12,10 @@ async function main() {
     waitUntil: "networkidle2",
   });
 
+  (await helpers.contactsList(page)).forEach((e, i) =>
+    console.log(`${i + 1} - ${e[1]}`)
+  );
+
   let lastLength = 0;
   let blockMessage = true;
 
