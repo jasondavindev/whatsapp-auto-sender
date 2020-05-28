@@ -2,5 +2,14 @@
   "dependencies": {
     "console-menu": "^0.1.0",
     "puppeteer": "^3.1.0"
+  },
+  "name": "whatsapp-auto-sender",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "repository": "git@github.com:jasondavindev/whatsapp-auto-sender.git",
+  "author": "jasondavindev <jasondavin.dev@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "node src/index.js"
   }
 }
