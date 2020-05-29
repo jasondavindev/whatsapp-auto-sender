@@ -1,41 +1,53 @@
-const selectors = require("./selectors");
+const { EventEmitter } = require("events");
 
-const writeMessage = async (page, message) => {
+const messageEmmiter = new EventEmitter({ captureRejections: true });
+
+exports.messageEmmiter = messageEmmiter;
+
+exports.writeMessage = async (page, message) => {
   await page.waitForSelector("._2S1VP", { visible: true });
   await page.keyboard.type(message);
   await page.click("._35EW6");
 };
 
-exports.writeMessage = writeMessage;
+exports.listenMessages = () => {
+  const messageContainer = document.querySelector("._9tCEa");
 
-exports.messageWatcher = (page, browser) => {
-  let blockMessage = true;
+  const watcher = new MutationObserver((mutations) => {
+    const container = mutations
+      .filter((mutation) => mutation.target === messageContainer)
+      .pop();
 
-  return async function watcher() {
-    let texts;
+    if (!container) return;
 
-    try {
-      texts = await selectors.getTextFromSelector(
-        page,
-        '.vW7d1.message-in span[dir="ltr"]'
-      );
-    } catch (error) {
-      await browser.close();
-      console.error(error.message);
-      console.log("Closing process");
-      process.exit(1);
-    }
+    const message = [...container.addedNodes]
+      .filter((node) => [...node.classList].includes("vW7d1"))
+      .pop();
 
-    const classList = await selectors.getClassListOfLastMessage(page);
+    if (!message) return;
 
-    blockMessage =
-      classList && classList.findIndex((e) => e === "message-in") !== -1
-        ? false
-        : true;
+    const messageType = [...message.classList].includes("message-in")
+      ? "in"
+      : "out";
 
-    if (!blockMessage) {
-      await writeMessage(page, texts.pop()[1]);
-      blockMessage = true;
-    }
-  };
+    const messageText = message.querySelector('span[dir="ltr"]').textContent;
+    console.log(
+      messageType,
+      JSON.stringify({
+        message: messageText,
+        time: Date.now(),
+      })
+    );
+
+    window.onMessage({
+      type: `message-${messageType}`,
+      message: messageText,
+      time: Date.now(),
+    });
+  });
+
+  watcher.observe(messageContainer, {
+    subtree: true,
+    childList: true,
+  });
 };

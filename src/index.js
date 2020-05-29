@@ -16,7 +16,18 @@ async function main() {
   const contact = await contacts.showContactsMenu(page);
   await contacts.selectContact(page, contact);
 
-  setInterval(messages.messageWatcher(page, browser), 500);
+  await page.exposeFunction("onMessage", ({ type, message, time }) => {
+    messages.messageEmmiter.emit(type, { message, time });
+  });
+  await page.evaluate(messages.listenMessages);
+
+  messages.messageEmmiter.on("message-in", ({ message, time }) => {
+    console.log(`[${new Date(time).toISOString()}](in) ${message}`);
+  });
+
+  messages.messageEmmiter.on("message-out", ({ message, time }) => {
+    console.log(`[${new Date(time).toISOString()}](out) ${message}`);
+  });
 }
 
 main();
