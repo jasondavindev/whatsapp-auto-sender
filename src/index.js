@@ -14,12 +14,12 @@ async function main() {
   });
 
   const contact = await contacts.showContactsMenu(page);
+  await page.$$eval("._2wP_Y", messages.listenMessages);
   await contacts.selectContact(page, contact);
 
   await page.exposeFunction("onMessage", ({ type, message, time }) => {
     messages.messageEmmiter.emit(type, { message, time });
   });
-  await page.evaluate(messages.listenMessages);
 
   messages.messageEmmiter.on("message-in", ({ message, time }) => {
     console.log(`[${new Date(time).toISOString()}](in) ${message}`);

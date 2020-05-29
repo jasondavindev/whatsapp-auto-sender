@@ -10,44 +10,48 @@ exports.writeMessage = async (page, message) => {
   await page.click("._35EW6");
 };
 
-exports.listenMessages = () => {
-  const messageContainer = document.querySelector("._9tCEa");
+// Client side function
+exports.listenMessages = (elements) => {
+  window.pupLib = {};
 
-  const watcher = new MutationObserver((mutations) => {
-    const container = mutations
-      .filter((mutation) => mutation.target === messageContainer)
-      .pop();
+  elements.forEach((element) => {
+    element.addEventListener("click", () => {
+      window.pupLib.watcher && window.pupLib.watcher.disconnect();
+      window.pupLib.messageContainer = document.querySelector("._9tCEa");
 
-    if (!container) return;
+      window.pupLib.watcher = new MutationObserver((mutations) => {
+        const container = mutations
+          .filter(
+            (mutation) => mutation.target === window.pupLib.messageContainer
+          )
+          .pop();
 
-    const message = [...container.addedNodes]
-      .filter((node) => [...node.classList].includes("vW7d1"))
-      .pop();
+        if (!container) return;
 
-    if (!message) return;
+        const message = [...container.addedNodes]
+          .filter((node) => [...node.classList].includes("vW7d1"))
+          .pop();
 
-    const messageType = [...message.classList].includes("message-in")
-      ? "in"
-      : "out";
+        if (!message) return;
 
-    const messageText = message.querySelector('span[dir="ltr"]').textContent;
-    console.log(
-      messageType,
-      JSON.stringify({
-        message: messageText,
-        time: Date.now(),
-      })
-    );
+        const messageType = [...message.classList].includes("message-in")
+          ? "message-in"
+          : "message-out";
 
-    window.onMessage({
-      type: `message-${messageType}`,
-      message: messageText,
-      time: Date.now(),
+        const messageText = message.querySelector('span[dir="ltr"]')
+          .textContent;
+
+        window.onMessage({
+          type: messageType,
+          message: messageText,
+          time: Date.now(),
+        });
+      });
+
+      window.pupLib.watcher.observe(window.pupLib.messageContainer, {
+        subtree: true,
+        childList: true,
+      });
     });
-  });
-
-  watcher.observe(messageContainer, {
-    subtree: true,
-    childList: true,
   });
 };
